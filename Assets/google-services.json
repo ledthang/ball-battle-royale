@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "510086530155",
+    "project_id": "ball-dont-fall-78621849",
+    "storage_bucket": "ball-dont-fall-78621849.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:510086530155:android:d73be53a80ed0895efdd2e",
+        "android_client_info": {
+          "package_name": "com.kkingStudio.BallDontFall"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "510086530155-jgjdb6s1ud8dh3g010rsct3sdsd939us.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPnLIDr7dVGVqn8oTozAB6EMWwi7sAUYE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "510086530155-jgjdb6s1ud8dh3g010rsct3sdsd939us.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
