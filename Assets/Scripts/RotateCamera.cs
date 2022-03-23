@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 
 public class RotateCamera : MonoBehaviour
 {
+    [SerializeField] GameObject player;
     [SerializeField] float rotateSpeed;
 
     public PlayerActionsExample playerInput;
@@ -23,6 +24,13 @@ public class RotateCamera : MonoBehaviour
     {
         Vector2 input = move.ReadValue<Vector2>();
         horizontalInput = input.x;
+    }
+
+    void LateUpdate()
+    {
         transform.Rotate(Vector3.up, rotateSpeed * horizontalInput * Time.deltaTime);
+
+        if (player.transform.position.y > 0)
+            transform.position = player.transform.position;
     }
 }

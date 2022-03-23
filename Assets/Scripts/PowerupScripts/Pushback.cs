@@ -9,13 +9,13 @@ using UnityEngine;
 
 public class Pushback : PlayerPowerupSystem
 {
-    float powerupStrength = 15;
+    float powerupStrength = 75;
     bool hasPowerup;
-
+    //protected Color indicatorColor = new Color32(255, 238, 0, 255);
     protected override void OnEnable()
     {
+        indicatorColor = new Color32(255, 238, 0, 255);
         base.OnEnable();
-        powerupStrength = (15 + GameManager.Instance.waveNumber) * 5;
         hasPowerup = true;
     }
 
@@ -30,13 +30,9 @@ public class Pushback : PlayerPowerupSystem
 
     }
 
-    public override void Passive()
-    {
-    }
-
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Enemy") && hasPowerup)
+        if (!collision.gameObject.CompareTag("Ground") && hasPowerup)
         {
             AudioManager.Instance.PlayPowerupSfx(this.powerupType);
             Rigidbody enemyRb = collision.gameObject.GetComponent<Rigidbody>();
@@ -45,10 +41,4 @@ public class Pushback : PlayerPowerupSystem
             Debug.Log("Player collided with: " + collision.gameObject.name + " withpowerup set to Pushback");
         }
     }
-    public override void Cast()
-    {
-        base.Cast();
-    }
-
-
 }

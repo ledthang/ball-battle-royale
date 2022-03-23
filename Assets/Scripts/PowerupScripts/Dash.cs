@@ -7,10 +7,11 @@ using UnityEngine;
 /// </summary>
 public class Dash : PlayerPowerupSystem
 {
-    float dashStrength = 10;
-
+    float dashStrength = 25;
+    //protected Color indicatorColor = new Color32(35, 255, 0, 255);
     protected override void OnEnable()
     {
+        indicatorColor = new Color32(35, 255, 0, 255);
         base.OnEnable();
         //dashStrength = (30 + GameManager.Instance.waveNumber) / 10;
     }
@@ -20,16 +21,11 @@ public class Dash : PlayerPowerupSystem
         base.OnDisable();
     }
 
-    public override void Passive()
-    {
-        base.Passive();
-    }
-
     public override void Cast()
     {
         AudioManager.Instance.PlayPowerupSfx(this.powerupType);
 
-        EnemyBehaviour[] enemies = FindObjectsOfType<EnemyBehaviour>();
+        Rigidbody[] enemies = FindObjectsOfType<Rigidbody>();
         Vector3 target;
         if (enemies.Length > 0)
         {
@@ -40,7 +36,7 @@ public class Dash : PlayerPowerupSystem
                 randomIndex = Random.Range(0, enemies.Length);
                 breakLoop++;
                 if (breakLoop >= 10) break;
-            } while (enemies[randomIndex].transform.position.y < -0.2f);
+            } while (!enemies[randomIndex].CompareTag("Ground") && enemies[randomIndex].transform.position.y < -0.2f);
             if (breakLoop < 10)
             {
                 Debug.Log("Dash target :" + enemies[randomIndex].name);
@@ -60,7 +56,6 @@ public class Dash : PlayerPowerupSystem
             rb.angularVelocity = Vector3.zero;
             rb.AddForce(direction * dashStrength, ForceMode.VelocityChange);
         }
-
 
         base.Cast();
     }

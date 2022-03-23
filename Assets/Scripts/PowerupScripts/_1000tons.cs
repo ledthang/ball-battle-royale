@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// super heavy, stop instantly
+/// super heavy, stop instantly, nerf a little
 /// </summary>
-public class _1000tons : PlayerPowerupSystem
+public class _1000tons : PlayerPowerupSystem // 1 ton only
 {
     Rigidbody rb;
     float tmpMass;
     float tmpSpeed;
-    float powerupStrength = 10;
+    float powerupStrength = 100;
+    //protected Color indicatorColor = new Color32(0, 0, 0, 255);
     protected override void OnEnable()
     {
+        indicatorColor = new Color32(0, 0, 0, 255);
         base.OnEnable();
         Debug.Log("1000tons enable");
 
@@ -21,9 +23,9 @@ public class _1000tons : PlayerPowerupSystem
         //get current mass and speed
         tmpMass = rb.mass;
         tmpSpeed = PlayerController.Instance.speed;
-        
+
         //set powerup attribute
-        rb.mass = 1000000f; //1000 tons
+        rb.mass = 1000f; //1 ton
         PlayerController.Instance.speed = rb.mass;
 
         //stop instantly
@@ -42,12 +44,6 @@ public class _1000tons : PlayerPowerupSystem
         rb.mass = tmpMass;
         PlayerController.Instance.speed = tmpSpeed;
     }
-
-    public override void Passive()
-    {
-        base.Passive();
-    }
-
     public override void Cast()
     {
         if (ammoLeft > 0)
@@ -55,19 +51,20 @@ public class _1000tons : PlayerPowerupSystem
             AudioManager.Instance.PlayPowerupSfx(this.powerupType);
 
             ammoLeft--;
-            ammoLeftText.text = ammoLeft + "/" + ammo;
 
             rb.velocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
 
             Debug.Log("STOPPPPP");
 
-            EnemyBehaviour[] enemies = FindObjectsOfType<EnemyBehaviour>();
-            for (int i = 0; i<enemies.Length; i++)
-            {
-                Vector3 lookDirection = (transform.position - enemies[i].transform.position).normalized;
-                enemies[i].GetComponent<Rigidbody>().AddForce(lookDirection * powerupStrength, ForceMode.VelocityChange);
-            }
+            Rigidbody[] enemies = FindObjectsOfType<Rigidbody>();
+            for (int i = 0; i < enemies.Length; i++)
+                if (enemies[i] != null & enemies[i] != rb)
+                {
+                    enemies[i].gameObject.GetComponent<IPlayer>()?.SetTouchedPlayer(this.gameObject.GetComponent<IPlayer>());
+                    Vector3 lookDirection = (transform.position - enemies[i].transform.position).normalized;
+                    enemies[i].AddForce(lookDirection * powerupStrength, ForceMode.Impulse);
+                }
         }
 
         base.Cast();

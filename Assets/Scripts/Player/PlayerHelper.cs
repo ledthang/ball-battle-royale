@@ -7,23 +7,20 @@ public class PlayerHelper : MonoBehaviour
 {
     public static PlayerHelper Instance;
 
-    //public GameObject player;
-
-    private int _currentWave;
-    public int currentWave
+    private string _name;
+    public string playerName
     {
         get
         {
-            LoadWave();
-            return _currentWave;
+            LoadName();
+            return _name;
         }
         set
         {
-            _currentWave = value;
-            SaveWave();
+            _name = value;
+            SaveName();
         }
     }
-
 
     private int _skinID;
     public int skinID
@@ -39,23 +36,6 @@ public class PlayerHelper : MonoBehaviour
             SaveSkinID();
         }
     }
-
-
-    private int _indicatorID;
-    public int indicatorID
-    {
-        get
-        {
-            LoadIndicatorID();
-            return _indicatorID;
-        }
-        set
-        {
-            _indicatorID = value;
-            SaveIndicatorID();
-        }
-    }
-
 
     public Color colorGrey = new Color(140, 140, 140);
     public Color colorYellow =  new Color(255, 194, 0);
@@ -76,53 +56,6 @@ public class PlayerHelper : MonoBehaviour
     }
 
 
-    private Color _indicatorColor;
-    public Color indicatorColor
-    {
-        get
-        {
-            LoadIndicatorColor();
-            return _indicatorColor;
-        }
-        set
-        {
-            _indicatorColor = value;
-            SaveIndicatorColor();
-        }
-    }
-
-
-    private int _massIncrease;
-    public int massIncrease
-    {
-        get
-        {
-            LoadMass();
-            return _massIncrease;
-        }
-        set
-        {
-            _massIncrease = value;
-            SaveMass();
-        }
-    }
-
-
-    private int _speedIncrease;
-    public int speedIncrease
-    {
-        get
-        {
-            LoadSpeed();
-            return _speedIncrease;
-        }
-        set
-        {
-            _speedIncrease = value;
-            SaveSpeed();
-        }
-    }
-
     void Awake()
     {
         if (Instance == null)
@@ -136,35 +69,15 @@ public class PlayerHelper : MonoBehaviour
 
         DontDestroyOnLoad(this);
 
-        Debug.Log("GAME START");
+        //Debug.Log("GAME START");
 
-        if (!PlayerPrefs.HasKey("currentWave"))
+        if (!PlayerPrefs.HasKey("playerName"))
         {
-            currentWave = 1;
+            playerName = "Player " + Random.Range(1000,9999).ToString();
         }
         else
         {
-            LoadWave();
-        }
-
-        if (!PlayerPrefs.HasKey("massIncrease"))
-        {
-            massIncrease = 1;
-        }
-        else
-        {
-            //massIncrease = 1;
-            LoadMass();
-        }
-
-        if (!PlayerPrefs.HasKey("speedIncrease"))
-        {
-            speedIncrease = 1;
-        }
-        else
-        {
-            //speedIncrease = 1;
-            LoadSpeed();
+            LoadName();
         }
 
         if (!PlayerPrefs.HasKey("skinID"))
@@ -176,15 +89,6 @@ public class PlayerHelper : MonoBehaviour
             LoadSkinID();
         }
 
-        if (!PlayerPrefs.HasKey("indicatorID"))
-        {
-            indicatorID = 0;
-        }
-        else
-        {
-            LoadIndicatorID();
-        }
-
         if (!PlayerPrefs.HasKey("skinColor"))
         {
             skinColor = colorGrey;
@@ -194,44 +98,16 @@ public class PlayerHelper : MonoBehaviour
             LoadSkinColor();
         }
 
-        if (!PlayerPrefs.HasKey("indicatorColor"))
-        {
-            indicatorColor = colorGrey;
-        }
-        else
-        {
-            LoadIndicatorColor();
-        }
-        Debug.Log("Start wave :" + currentWave);
     }
 
-    void SaveWave()
+    void SaveName()
     {
-        PlayerPrefs.SetInt("currentWave", _currentWave);
+        PlayerPrefs.SetString("playerName", _name);
     }
-    void LoadWave()
+    void LoadName()
     {
-        _currentWave = PlayerPrefs.GetInt("currentWave");
+        _name = PlayerPrefs.GetString("playerName");
     }
-
-    void SaveMass()
-    {
-        PlayerPrefs.SetInt("massIncrease", _massIncrease);
-    }
-    void LoadMass()
-    {
-        _massIncrease = PlayerPrefs.GetInt("massIncrease");
-    }
-
-    void SaveSpeed()
-    {
-        PlayerPrefs.SetInt("speedIncrease", _speedIncrease);
-    }
-    void LoadSpeed()
-    {
-        _speedIncrease = PlayerPrefs.GetInt("speedIncrease");
-    }
-
     void SaveSkinID()
     {
         PlayerPrefs.SetInt("skinID", _skinID);
@@ -239,15 +115,6 @@ public class PlayerHelper : MonoBehaviour
     void LoadSkinID()
     {
         _skinID = PlayerPrefs.GetInt("skinID");
-    }
-
-    void SaveIndicatorID()
-    {
-        PlayerPrefs.SetInt("indicatorID", _indicatorID);
-    }
-    void LoadIndicatorID()
-    {
-        _indicatorID = PlayerPrefs.GetInt("indicatorID");
     }
 
     void SaveSkinColor()
@@ -265,29 +132,9 @@ public class PlayerHelper : MonoBehaviour
 
         if (ColorUtility.TryParseHtmlString(colorHexCode, out color))
         {
-            Debug.Log("Load skin color success");
+            //Debug.Log("Load skin color success");
             _skinColor = color;
         }
     }
-
-    void SaveIndicatorColor()
-    {
-        PlayerPrefs.SetString("indicatorColor", ColorUtility.ToHtmlStringRGBA(_indicatorColor));
-    }
-    void LoadIndicatorColor()
-    {
-        var colorHexCode = PlayerPrefs.GetString("indicatorColor");
-        if (colorHexCode[0] != '#')
-            colorHexCode = '#' + colorHexCode;
-
-        Color color = colorGrey;
-
-        if (ColorUtility.TryParseHtmlString(colorHexCode, out color))
-        {
-            Debug.Log("Load indicator color success");
-            _indicatorColor = color;
-        }
-    }
-
 
 }

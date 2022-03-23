@@ -6,17 +6,18 @@ using UnityEngine;
 /// Shoot around player
 /// </summary>
 [System.Serializable]
-public class Rockets : PlayerPowerupSystem
+public class Rockets : PlayerPowerupSystem, ICastable
 {
     [SerializeField] GameObject rocketPrefab;
     private GameObject tmpRocket;
     bool isFire;
     Coroutine FireCoroutine;
-
+    //protected Color indicatorColor = new Color32(255, 0, 0, 255);
     protected override void OnEnable()
     {
+        indicatorColor = new Color32(255, 0, 0, 255);
         base.OnEnable();
-
+        rocketPrefab = Resources.Load<GameObject>("Rocket");
         isFire = false;
     }
 
@@ -36,19 +37,12 @@ public class Rockets : PlayerPowerupSystem
         }
 
     }
-
-    public override void Passive()
-    {
-        base.Passive();
-    }
-
     public override void Cast()
     {
         if (ammoLeft > 0 && !isFire)
         {
             isFire = true;
             ammoLeft--;
-            ammoLeftText.text = ammoLeft + "/" + ammo;
             FireCoroutine = StartCoroutine(Fire());
             Debug.Log("FIREEEEEEEEEE");
         }
@@ -64,8 +58,9 @@ public class Rockets : PlayerPowerupSystem
             AudioManager.Instance.PlayPowerupSfx(this.powerupType);
 
             var tmpRot = new Vector3(0, rot.y + a, 0);
-            tmpRocket = Instantiate(rocketPrefab, transform.position, Quaternion.Euler(tmpRot));
-            tmpRocket.GetComponent<RocketBehaviour>().Fire();
+            var tmpPos = new Vector3(transform.position.x, 0.05f, transform.position.z);
+            tmpRocket = Instantiate(rocketPrefab, tmpPos, Quaternion.Euler(tmpRot));
+            tmpRocket.GetComponent<RocketBehaviour>().Fire(this.GetComponent<Rigidbody>());
 
             yield return new WaitForSeconds(0.05f);
         }

@@ -6,9 +6,9 @@ public class RocketBehaviour : MonoBehaviour
 {
     private float speed = 15;
     private bool isFire;
-    private float rocketStrength = 15;
+    private float rocketStrength = 125;
     private float aliveTimer = 5;
-
+    private Rigidbody firedPlayer;
     private void Update()
     {
         if (isFire)
@@ -18,22 +18,22 @@ public class RocketBehaviour : MonoBehaviour
         }
     }
 
-    public void Fire()
+    public void Fire(Rigidbody player)
     {
-        rocketStrength = (15 + GameManager.Instance.waveNumber) * 5;
+        firedPlayer = player;
         isFire = true;
         Destroy(this.gameObject, aliveTimer);
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Enemy"))
+        Rigidbody targetRb = collision.gameObject.GetComponent<Rigidbody>();
+        if (targetRb != firedPlayer)
         {
-            Rigidbody targetRb = collision.gameObject.GetComponent<Rigidbody>();
+            targetRb.gameObject.GetComponent<IPlayer>()?.SetTouchedPlayer(firedPlayer.gameObject.GetComponent<IPlayer>());
             Vector3 away = -collision.contacts[0].normal;
             targetRb.AddForce(away * rocketStrength, ForceMode.Impulse);
             Destroy(this.gameObject);
         }
     }
-
 }

@@ -3,77 +3,70 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-public class PlayerPowerupSystem : MonoBehaviour
+public interface ICastable
+{
+    void Cast();
+}
+public class PlayerPowerupSystem : MonoBehaviour, ICastable
 {
     [SerializeField] protected PowerupType powerupType;
+    GameObject indicator;
+    [SerializeField] protected GameObject indicatorPrefab;
+    [SerializeField] protected Color indicatorColor = Color.red;
 
-    public int powerupTime = 7;
-    public int ammo = 3;
+    public int powerupTime = 17;
+    public int ammo = 1;
     // ammo = 0 : no cast skill
     // ammo = -1: inf cast 
     // ammo > 0 : cast n times, default = 3
-
-    protected TextMeshProUGUI ammoLeftText;
 
     protected int ammoLeft;
 
     private void Awake()
     {
-        ammoLeftText = GameObject.Find("Canvas").transform.Find("Ammo Left").GetComponent<TextMeshProUGUI>();
     }
 
     protected void Update()
     {
-        if (GameManager.Instance.isGameOver)
-        {
-            gameObject.SetActive(false);
-        }
+        indicator.transform.position = this.transform.position + new Vector3(0, -0.5f, 0);
+        indicator.transform.localScale = new Vector3(3, 1, 3) * this.transform.localScale.x / 1.5f;
     }
 
     protected virtual void OnEnable()
     {
         AudioManager.Instance.PlayPowerupPickupSfx();
 
-        Debug.Log(PlayerController.Instance.currentPowerup + " enabled");
-        PlayerController.doPowerupPassive += Passive;
-        PlayerController.doPowerupCast += Cast;
-
-
         if (ammo != 0)
         {
             ammoLeft = ammo;
-
-            PlayerController.Instance.castButton.gameObject.SetActive(true);
-
-            if (ammo > 0)
+            if (this.CompareTag("cPlayer"))
             {
-                ammoLeftText.gameObject.SetActive(true);
-                ammoLeftText.text = ammoLeft + "/" + ammo;
+                PlayerController.Instance.castButton.gameObject.SetActive(true);
             }
         }
+
+        indicatorPrefab = Resources.Load<GameObject>("Indicator1");
+        indicator = Instantiate(indicatorPrefab);
+        indicator.GetComponent<MeshRenderer>().material.color = indicatorColor;
     }
     protected virtual void OnDisable()
     {
-        Debug.Log(PlayerController.Instance.currentPowerup + " disabled");
-        PlayerController.doPowerupPassive -= Passive;
-        PlayerController.doPowerupCast -= Cast;
-
-        PlayerController.Instance.castButton.gameObject.SetActive(false);
-
-        ammoLeftText.gameObject.SetActive(false);
-    }
-
-    public virtual void Passive()
-    {
-
+        if (this.CompareTag("cPlayer"))
+        {
+            Debug.Log(PlayerController.Instance.currentPowerup + " disabled");
+            PlayerController.Instance.castButton.gameObject.SetActive(false);
+        }
+        Destroy(indicator);
     }
 
     public virtual void Cast()
     {
-        if (ammoLeft == 0)
+        if (this.CompareTag("cPlayer"))
         {
-            PlayerController.Instance.castButton.gameObject.SetActive(false);
+            if (ammoLeft == 0)
+            {
+                PlayerController.Instance.castButton.gameObject.SetActive(false);
+            }
         }
     }
-
 }

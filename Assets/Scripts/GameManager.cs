@@ -12,12 +12,13 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject gameOverLayer;
     public Button playAgainButton;
     [SerializeField] private TextMeshProUGUI timeText;
-    [SerializeField] private TextMeshProUGUI waveText;
+    [SerializeField] private TextMeshProUGUI loadText;
+    [SerializeField] GameObject loadingCanvas;
     public bool isGameOver { get; private set; }
     public bool isWaveStartCountdown { get; set; }
-    public bool isWaveStart { get; set; }
-    public float timeRemaining { get; set; }
-    public int waveNumber;
+    //public bool isWaveStart { get; set; }
+   public float timeRemaining { get; set; }
+    //public int waveNumber;
 
     private float lowerBound = -10;
 
@@ -36,22 +37,48 @@ public class GameManager : MonoBehaviour
         }
 
         isGameOver = false;
-        isWaveStartCountdown = true;
-        timeRemaining = 3;
-        waveNumber = PlayerHelper.Instance.currentWave;
+        //isWaveStartCountdown = true;
+        //timeRemaining = 3;
+        //============================
         player = GameObject.Find("Player") as GameObject;
         gameOverSoundPlayed = false;
     }
 
     void Start()
     {
-        AdsManager.Instance.ShowBannerAd();
+        //AdsManager.Instance.ShowBannerAd();
+        StartCoroutine(LoadAndStartGame());
+    }
+
+    IEnumerator LoadAndStartGame()
+    {
+        int loopCount = Random.Range(3, 10);
+        for (int i = 0; i < loopCount; i++)
+        {
+            loadText.text = ".";
+            yield return new WaitForSeconds(0.25f);
+            loadText.text = "..";
+            yield return new WaitForSeconds(0.25f);
+            loadText.text = "...";
+            yield return new WaitForSeconds(0.25f);
+        }
+        loopCount = Random.Range(3, 10);
+        for (int i = 0; i < loopCount; i++)
+        {
+            loadText.text = "Loading.";
+            yield return new WaitForSeconds(0.25f);
+            loadText.text = "Loading..";
+            yield return new WaitForSeconds(0.25f);
+            loadText.text = "Loading...";
+            yield return new WaitForSeconds(0.25f);
+        }
+        loadingCanvas.SetActive(false);
+        PlayAgainButton();
     }
 
     void Update()
     {
         CheckGameOver();
-        waveText.text = waveNumber.ToString();
 
         if (isGameOver)
         {
@@ -77,25 +104,18 @@ public class GameManager : MonoBehaviour
             {
                 //Debug.Log("stop countdown");
                 timeText.gameObject.SetActive(false);
-                isWaveStart = true;
+                //isWaveStart = true;
                 isWaveStartCountdown = false;
             }
-        }
-
-        if (waveNumber % 1 == 0)
-        {
-            PlayerHelper.Instance.currentWave = waveNumber;
-            //Debug.Log("Save wave: " + waveNumber);
         }
     }
 
     void CheckGameOver()
     {
         if (player.gameObject.activeSelf)
-            if ((player.transform.position.y < lowerBound) || PlayerController.Instance.standTooLong)
+            if ((player.transform.position.y < lowerBound))
             {
                 isGameOver = true;
-                PlayerController.Instance.standTooLong = false;
             }
     }
     void DisplayTime(float timeToDisplay)
@@ -114,27 +134,25 @@ public class GameManager : MonoBehaviour
 
     public void PlayAgainButton()
     {
-        Debug.Log("Start play again coroutine");
+        //Debug.Log("Start play again coroutine");
         gameOverLayer.gameObject.SetActive(false);
         isWaveStartCountdown = true;
         timeRemaining = 3;
+        PlayerController.Instance.ResetPoint();
         isGameOver = false;
         player.SetActive(false);
-        //player.transform.position = new Vector3(0, 10, 0);
+        PlayerController.Instance.isPointGiven = false;
 
         EnemyBehaviour[] enemyLeft = FindObjectsOfType<EnemyBehaviour>();
         int enemyCount = enemyLeft.Length;
-       
-        if (enemyCount == 0) 
-            SpawnManager.Instance.Create1Enemy();
 
-        Debug.Log("Drop player");
+        //Debug.Log("Drop player");
         dropPlayerCoroutine = StartCoroutine(DropPlayer());
     }
     IEnumerator DropPlayer()
     {
         yield return new WaitForSeconds(3);
-        player.transform.position = new Vector3(0, 10, 0);
+        player.transform.position = SpawnManager.Instance.GenerateSpawnPosition() + new Vector3(0, 3, 0);
         player.SetActive(true);
 
         Rigidbody rb = player.GetComponent<Rigidbody>();
@@ -143,24 +161,11 @@ public class GameManager : MonoBehaviour
         rb.angularVelocity = Vector3.zero;
 
         PlayerController.Instance.NoPowerup();
-        PlayerController.Instance.joystick.SetActive(true);
+        //PlayerController.Instance.joystick.SetActive(true);
     }
     public void MainMenu()
     {
-        AdsManager.Instance.HideBannerAd();
+        //AdsManager.Instance.HideBannerAd();
         SceneManager.LoadScene(0);
-    }
-
-    public void ShowPlayAgainRewardAds()
-    {
-        AdsManager.Instance.ShowPlayAgainVideoRewardAd();
-    }
-    public void EnablePlayAgainButton()
-    {
-        playAgainButton.interactable = true;
-    }
-    public void DisablePlayAgainButton()
-    {
-        playAgainButton.interactable = false;
     }
 }

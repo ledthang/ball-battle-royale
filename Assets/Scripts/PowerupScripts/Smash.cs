@@ -6,22 +6,22 @@ using UnityEngine;
 /// jump and add explosion force around when grounded
 /// </summary>
 [System.Serializable]
-public class Smash : PlayerPowerupSystem
+public class Smash : PlayerPowerupSystem, ICastable
 {
     float hangTime = 1;
     float smashSpeed = 3;
-    float explosionForce = 20;
-    float explosionRadius = 15;
+    float explosionForce = 150;
+    float explosionRadius = 25;
 
     private bool smashing;
     private float floorY;
 
     Coroutine SmashCoroutine;
-
+    //protected Color indicatorColor = new Color32(111, 110, 110, 255);
     protected override void OnEnable()
     {
+        indicatorColor = new Color32(111, 110, 110, 255);
         base.OnEnable();
-        explosionForce = (20 + GameManager.Instance.waveNumber) * 6;
         smashing = false;
     }
 
@@ -37,11 +37,6 @@ public class Smash : PlayerPowerupSystem
 
     }
 
-    public override void Passive()
-    {
-        base.Passive();
-    }
-
     public override void Cast()
     {
         if (ammoLeft > 0 && !smashing)
@@ -49,7 +44,6 @@ public class Smash : PlayerPowerupSystem
             Debug.Log("SMASHHHHHHHHHHHH");
             smashing = true;
             ammoLeft--;
-            ammoLeftText.text = ammoLeft + "/" + ammo;
             SmashCoroutine = StartCoroutine(DoSmash(this.gameObject));
         }
 
@@ -59,7 +53,7 @@ public class Smash : PlayerPowerupSystem
     IEnumerator DoSmash(GameObject player)
     {
         var playerRb = player.GetComponent<Rigidbody>();
-        var enemies = FindObjectsOfType<EnemyBehaviour>();
+        var enemies = FindObjectsOfType<Rigidbody>();
         //Store the y position before taking off
         floorY = transform.position.y;
         //Calculate the amount of time we will go up
@@ -77,7 +71,7 @@ public class Smash : PlayerPowerupSystem
             yield return null;
         }
 
-        if (PlayerController.Instance.isGrounded())
+        if (transform.position.y <= floorY)
         {
             //play explosion sound
             AudioManager.Instance.PlayPowerupSfx(this.powerupType);
@@ -86,8 +80,11 @@ public class Smash : PlayerPowerupSystem
             for (int i = 0; i < enemies.Length; i++)
             {
                 //Apply an explosion force that originates from our position.
-                if (enemies[i] != null)
-                    enemies[i].GetComponent<Rigidbody>().AddExplosionForce(explosionForce, transform.position, explosionRadius, 0.0f, ForceMode.Impulse);
+                if (enemies[i] != null && enemies[i] != playerRb)
+                {
+                    enemies[i].gameObject.GetComponent<IPlayer>()?.SetTouchedPlayer(this.gameObject.GetComponent<IPlayer>());
+                    enemies[i].AddExplosionForce(explosionForce, transform.position, explosionRadius, 0.0f, ForceMode.Impulse);
+                }
             }
 
         }

@@ -1,4 +1,4 @@
-using System.Collections;
+/*using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,41 +19,6 @@ public class AdsManager : MonoBehaviour
 
     private BannerView bannerView;
     private InterstitialAd interstitialAd;
-    public RewardedAd rewardedAdPlayAgain;
-    public RewardedAd rewardedAdRandomSkinColor;
-    public RewardedAd rewardedAdRandomIndicatorColor;
-    //public bool adsShow = false;
-    #region REWARDED ADS UNIT ID
-
-#if UNITY_EDITOR
-    const string rewardedAdPlayAgainUnitId = "unused";
-    const string rewardedAdRandomSkinColorUnitId = "unusedd";
-    const string rewardedAdRandomIndicatorColorUnitId = "unuseddd";
-#elif UNITY_ANDROID
-/*        const string rewardedAdPlayAgainUnitId = "ca-app-pub-3940256099942544/5224354917"; //SAMPLE
-        const string rewardedAdRandomSkinColorUnitId = "ca-app-pub-3940256099942544/5224354917"; //SAMPLE     
-        const string rewardedAdRandomIndicatorColorUnitId = "ca-app-pub-3940256099942544/5224354917"; //SAMPLE*/
-        const string rewardedAdPlayAgainUnitId = "ca-app-pub-7362583481441359/6502521528";    
-        const string rewardedAdRandomSkinColorUnitId = "ca-app-pub-7362583481441359/6781761110";        
-        const string rewardedAdRandomIndicatorColorUnitId = "ca-app-pub-7362583481441359/6590189421"; 
-#elif UNITY_IPHONE
-        const string rewardedAdPlayAgainUnitId = "ca-app-pub-3940256099942544/1712485313"; //SAMPLE
-        const string rewardedAdRandomSkinColorUnitId = "ca-app-pub-3940256099942544/1712485313"; //SAMPLE        
-        const string rewardedAdRandomIndicatorColorUnitId = "ca-app-pub-3940256099942544/1712485313"; //SAMPLE
-#else
-        const string rewardedAdPlayAgainUnitId = "unexpected_platform";
-        const string rewardedAdRandomSkinColorUnitId = "unexpected_platform";        
-        const string rewardedAdRandomIndicatorColorUnitId = "unexpected_platform";
-#endif
-
-    #endregion
-
-    public enum RewardedVideoAds
-    {
-        PlayAgain,
-        RandomSkinColor,
-        RandomIndicatorColor
-    }
 
     void Awake()
     {
@@ -78,9 +43,6 @@ public class AdsManager : MonoBehaviour
         this.RequestBanner();
         this.bannerView.Hide();
         this.RequestAndLoadInterstitialAd();
-        this.rewardedAdPlayAgain = RequestAndLoadRewardedAd(RewardedVideoAds.PlayAgain);
-        this.rewardedAdRandomSkinColor = RequestAndLoadRewardedAd(RewardedVideoAds.RandomSkinColor);
-        this.rewardedAdRandomIndicatorColor = RequestAndLoadRewardedAd(RewardedVideoAds.RandomIndicatorColor);
     }
 
     private AdRequest CreateAdRequest()
@@ -200,165 +162,5 @@ public class AdsManager : MonoBehaviour
 
 
     #endregion
-
-    #region REWARDED ADS
-
-    public RewardedAd RequestAndLoadRewardedAd(RewardedVideoAds type)
-    {
-        string adUnitId = type switch
-        {
-            RewardedVideoAds.PlayAgain => rewardedAdPlayAgainUnitId,
-            RewardedVideoAds.RandomSkinColor => rewardedAdRandomSkinColorUnitId,
-            RewardedVideoAds.RandomIndicatorColor => rewardedAdRandomIndicatorColorUnitId,
-            _ => null
-        };
-        RewardedAd rewardedAd;
-        // create new rewarded ad instance
-        rewardedAd = new RewardedAd(adUnitId);
-
-        switch (type)
-        {
-            case RewardedVideoAds.PlayAgain:
-                rewardedAd.OnAdOpening += HandleOnAdOpening;
-                rewardedAd.OnAdClosed += HandleRewardedAdClosed;
-                rewardedAd.OnUserEarnedReward += ReceivePlayAgain;
-                break;
-            case RewardedVideoAds.RandomSkinColor:
-                rewardedAd.OnAdLoaded += EnableRandomSkinColorButton;
-                rewardedAd.OnAdOpening += HandleOnAdOpening;
-                rewardedAd.OnAdClosed += HandleRewardedAdClosed;
-                rewardedAd.OnAdClosed += DisableRandomSkinColorButton;
-                rewardedAd.OnUserEarnedReward += ReceiveRandomSkinColor;
-                break;
-            case RewardedVideoAds.RandomIndicatorColor:
-                rewardedAd.OnAdLoaded += EnableRandomIndicatorColorButton;
-                rewardedAd.OnAdOpening += HandleOnAdOpening;
-                rewardedAd.OnAdClosed += HandleRewardedAdClosed;
-                rewardedAd.OnAdClosed += DisableRandomIndicatorColorButton;
-                rewardedAd.OnUserEarnedReward += ReceiveRandomIndicatorColor;
-                break;
-        }
-
-
-        // Create empty ad request
-        RequestRewardedVideoAd(rewardedAd);
-
-        return rewardedAd;
-    }
-
-    private void RequestRewardedVideoAd(RewardedAd rewardedAd)
-    {
-        Debug.Log("request ads");
-        AdRequest request = new AdRequest.Builder().Build();
-        rewardedAd.LoadAd(request);
-    }
-
-    public void ShowPlayAgainVideoRewardAd()
-    {
-        if (this.rewardedAdPlayAgain.IsLoaded())
-        {
-            this.rewardedAdPlayAgain.Show();
-        }
-        else
-        {
-            Debug.Log("rewarded Ad not loaded");
-        }
-    }
-    public void ShowRandomSkinColorVideoRewardAd()
-    {
-        if (this.rewardedAdRandomSkinColor.IsLoaded())
-        {
-            this.rewardedAdRandomSkinColor.Show();
-        }
-        else
-        {
-            Debug.Log("rewarded Ad not loaded");
-        }
-    }
-    public void ShowRandomIndicatorColorVideoRewardAd()
-    {
-        if (this.rewardedAdRandomIndicatorColor.IsLoaded())
-        {
-            this.rewardedAdRandomIndicatorColor.Show();
-        }
-        else
-        {
-            Debug.Log("rewarded Ad not loaded");
-        }
-    }
-
-    public void EnablePlayAgainButton(object sender, EventArgs args)
-    {
-        //GameManager.Instance.EnablePlayAgainButton();
-    }
-    public void EnableRandomSkinColorButton(object sender, EventArgs args)
-    {
-        PlayerManager.Instance.randomSkinColorButton.interactable = true;
-    }
-    public void EnableRandomIndicatorColorButton(object sender, EventArgs args)
-    {
-        PlayerManager.Instance.randomIndicatorColorButton.interactable = true;
-    }
-
-    public void DisablePlayAgainButton(object sender, EventArgs args)
-    {
-        //GameManager.Instance.DisablePlayAgainButton();
-    }
-    public void DisableRandomSkinColorButton(object sender, EventArgs args)
-    {
-        PlayerManager.Instance.randomSkinColorButton.interactable = false;
-    }
-    public void DisableRandomIndicatorColorButton(object sender, EventArgs args)
-    {
-        PlayerManager.Instance.randomIndicatorColorButton.interactable = false;
-    }
-
-    public void HandleOnAdOpening(object sender, EventArgs args)
-    {
-        Time.timeScale = 1;
-        AudioManager.Instance.muteSnapshot.TransitionTo(0);
-    }
-
-    public void HandleRewardedAdClosed(object sender, EventArgs args)
-    {
-        MonoBehaviour.print("HandleRewardedAdClosed event received " + sender);
-        RequestRewardedVideoAd((RewardedAd)sender);
-        AudioManager.Instance.normalSnapshot.TransitionTo(0);
-        //Time.timeScale = 1;
-    }
-
-    public void ReceivePlayAgain(object sender, EventArgs args)
-    {
-        Debug.Log("Rewarded play again");
-        GameManager.Instance.PlayAgainButton();
-    }
-
-    public void ReceiveRandomSkinColor(object sender, EventArgs args)
-    {
-        Debug.Log("Rewarded random skin color");
-        PlayerManager.Instance.RandomSkinColor();
-    }
-
-    public void ReceiveRandomIndicatorColor(object sender, EventArgs args)
-    {
-        Debug.Log("Rewarded random indicator color");
-        PlayerManager.Instance.RandomIndicatorColor();
-    }
-
-    public void CheckButton(RewardedAd rewardedAd, Button button)
-    {
-        if (rewardedAd.IsLoaded())
-        {
-            button.interactable = true;
-        }
-        else
-        {
-            button.interactable = false;
-        }
-    }
-    #endregion
-
-    void Update()
-    {
-    }
 }
+*/

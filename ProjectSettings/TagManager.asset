@@ -5,8 +5,9 @@ TagManager:
   serializedVersion: 2
   tags:
   - Powerup
-  - Enemy
   - Ground
+  - Rocket
+  - cPlayer
   layers:
   - Default
   - TransparentFX

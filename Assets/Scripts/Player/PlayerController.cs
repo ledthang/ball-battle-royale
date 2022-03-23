@@ -4,34 +4,22 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.InputSystem;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviour, IPlayer
 {
     public static PlayerController Instance { get; private set; }
     PlayerPowerupSystem powerupController;
     private float verticalInput;
     private Rigidbody playerRb;
-    public float speed;
-    private float speedRatio = 5; //speed / mass ratio
+    public float speed = 10; //3
+    float baseSpeed = 10; //3
+    float baseMass = 10;
     private GameObject focalPoint;
     public PowerupType currentPowerup { get; set; }
 
-    public GameObject powerupIndicator;
-    private MeshRenderer powerupIndicatorRenderer;
-    [SerializeField] Material powerupIndicatorBaseMaterial;
     private Coroutine powerUpCountdown;
     float powerupTime = 7;
     [SerializeField] private TextMeshProUGUI powerupCountdownText;
     float powerupRemaining;
-
-    public delegate void DoPowerupCast();
-    public static event DoPowerupCast doPowerupCast;
-    public delegate void DoPowerupPassive();
-    public static event DoPowerupPassive doPowerupPassive;
-
-    private bool standStilltimerStarted = false;
-    private float standStilltimer = 0;
-    private float maxStandTime = 7;
-    public bool standTooLong = false;
 
     private PlayerActionsExample playerInput;
     private InputAction move;
@@ -40,8 +28,20 @@ public class PlayerController : MonoBehaviour
     [SerializeField] public GameObject castButton;
 
     [SerializeField] PlayerSkinDB skinDB;
-    [SerializeField] PlayerPowerupIndicatorDB indicatorDB;
 
+    public int point;
+    List<IPlayer> touchedPlayer = new List<IPlayer>();
+
+    private float lowerBound = -10;
+    private float sideBound = 40;
+    private float topBound = 10;
+
+    public bool isPointGiven;
+
+    [SerializeField] GameObject canvas;
+    [SerializeField] GameObject nameTextPrefab;
+    GameObject nameText;
+    Vector3 nameOffset = new Vector3(0, 1, 0);
     void Start()
     {
         if (Instance == null)
@@ -63,7 +63,6 @@ public class PlayerController : MonoBehaviour
         castSkill.performed += CastSkill;
 
         SetStartStat();
-
         NoPowerup();
     }
 
@@ -72,46 +71,51 @@ public class PlayerController : MonoBehaviour
         playerRb = this.GetComponent<Rigidbody>();
         focalPoint = GameObject.Find("Focal Point");
 
-        Debug.Log("START GAME WITH: skinID " + PlayerHelper.Instance.skinID + ", indicatorID " + PlayerHelper.Instance.indicatorID);
         this.GetComponent<MeshRenderer>().material = skinDB.GetSkin(PlayerHelper.Instance.skinID);
         if (PlayerHelper.Instance.skinID != 9)
         {
             this.GetComponent<MeshRenderer>().material.color = PlayerHelper.Instance.skinColor;
         }
 
-        powerupIndicator = Instantiate(indicatorDB.GetIndicator(PlayerHelper.Instance.indicatorID), this.transform.position, this.transform.rotation);
-        powerupIndicatorRenderer = powerupIndicator.GetComponent<MeshRenderer>();
-        powerupIndicatorBaseMaterial.color = PlayerHelper.Instance.indicatorColor;
-
-        powerupIndicator.AddComponent<RotateAround>().speed = -0.5f;
-
-        playerRb.mass += PlayerHelper.Instance.massIncrease;
-        speed += PlayerHelper.Instance.speedIncrease;
-        speed *= speedRatio;
+        point = 0;
+        isPointGiven = false;
+        speed = baseSpeed * playerRb.mass;
 
         powerupCountdownText.gameObject.SetActive(false);
-        joystick.gameObject.SetActive(true);
+        //joystick.gameObject.SetActive(true);
         castButton.gameObject.SetActive(false);
+
+
+        canvas = GameObject.Find("Canvas");
+
+        nameText = Instantiate(nameTextPrefab, canvas.transform);
+        nameText.GetComponent<TextMeshProUGUI>().text = PlayerHelper.Instance.playerName;
+        nameText.GetComponent<TextMeshProUGUI>().color = Color.yellow;
     }
 
     void Update()
     {
         HandleMovement();
         HandlePowerup();
-        CheckPlayerStandStill();
+        DestroyOutOfBound();
+    }
+    void LateUpdate()
+    {
+        HandleNameText();
+    }
+    void HandleNameText()
+    {
+        nameText.transform.position = Camera.main.WorldToScreenPoint(this.transform.position + nameOffset);
     }
 
     void HandleMovement()
     {
         Vector2 input = move.ReadValue<Vector2>();
         verticalInput = input.y;
-        if (GameManager.Instance.isWaveStart && isGrounded())
+        if (isGrounded())
         {
             playerRb.AddForce(focalPoint.transform.forward * speed * verticalInput);
         }
-
-        //PowerupIndicator follow player
-        powerupIndicator.transform.position = transform.position + new Vector3(0, -0.5f, 0);
     }
 
     void HandlePowerup()
@@ -119,48 +123,55 @@ public class PlayerController : MonoBehaviour
         DisplayTime(powerupRemaining);
         powerupRemaining -= Time.deltaTime;
 
-        if (doPowerupPassive != null)
-        {
-            doPowerupPassive();
-        }
-
         if (GameManager.Instance.isGameOver)
         {
             powerupCountdownText.gameObject.SetActive(false);
-            powerupIndicatorRenderer.material = powerupIndicatorBaseMaterial;
         }
     }
 
-    private void CastSkill(InputAction.CallbackContext context)
+    private void CastSkill(InputAction.CallbackContext ctx)
     {
-        if (doPowerupCast != null)
+        if (powerupController != null)
         {
-            doPowerupCast();
+            ICastable iCast = powerupController.GetComponent<ICastable>();
+            if (iCast != null)
+                iCast?.Cast();
         }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Powerup") && GameManager.Instance.isWaveStart)
+        if (other.CompareTag("Powerup"))
         {
-            if (powerupController != null)
-            {
-                powerupController.enabled = false;
-            }
-
+            NoPowerup();
 
             powerupCountdownText.gameObject.SetActive(true);
 
             currentPowerup = other.gameObject.GetComponent<Powerup>().powerupType;
 
             //Debug.Log(currentPowerup);
-            powerupController = this.GetComponent(currentPowerup.ToString()) as PlayerPowerupSystem;
-            powerupController.enabled = true;
-            powerupTime = powerupController.powerupTime;
-            powerupRemaining = powerupTime;
+            switch (currentPowerup)
+            {
+                case PowerupType.Pushback:
+                    powerupController = this.gameObject.AddComponent<Pushback>() as PlayerPowerupSystem;
+                    break;
+                case PowerupType.Rockets:
+                    powerupController = this.gameObject.AddComponent<Rockets>() as PlayerPowerupSystem;
+                    break;
+                case PowerupType.Smash:
+                    powerupController = this.gameObject.AddComponent<Smash>() as PlayerPowerupSystem;
+                    break; ;
+                case PowerupType.Dash:
+                    powerupController = this.gameObject.AddComponent<Dash>() as PlayerPowerupSystem;
+                    break;
+                case PowerupType._1000tons:
+                    powerupController = this.gameObject.AddComponent<_1000tons>() as PlayerPowerupSystem;
+                    break;
+            }
+
+            powerupRemaining = powerupTime = powerupController.powerupTime;
 
             Destroy(other.gameObject);
-            powerupIndicator.GetComponent<MeshRenderer>().material = other.GetComponent<MeshRenderer>().material;
             Debug.Log("Powerup with " + other.name);
 
             if (powerUpCountdown != null)
@@ -182,15 +193,12 @@ public class PlayerController : MonoBehaviour
     {
         if (powerupController != null)
         {
-            powerupController.enabled = false;
+            Destroy(powerupController);
         }
 
         powerupCountdownText.gameObject.SetActive(false);
-        powerupIndicatorRenderer.material = powerupIndicatorBaseMaterial;
 
         currentPowerup = PowerupType.None;
-        doPowerupCast = null;
-        doPowerupPassive = null;
         castButton.gameObject.SetActive(false);
     }
 
@@ -205,8 +213,32 @@ public class PlayerController : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            AudioManager.Instance.PlayCollsionWithEnemySfx(this.transform.position);
+            SetTouchedPlayer(collision.gameObject.GetComponent<IPlayer>());
+        }
     }
 
+    void DestroyOutOfBound()
+    {
+        //destroy out of bound
+        if ((transform.position.y < lowerBound) || (transform.position.x > sideBound) || (transform.position.z > sideBound) || (transform.position.y > topBound))
+        {
+            if (!isPointGiven)
+            {
+                isPointGiven = true;
+                foreach (var player in touchedPlayer)
+                {
+                    MonoBehaviour mb = player as MonoBehaviour;
+                    if (mb != null)
+                        //if (player != null)
+                        player?.AddPoint();
+                }
+                touchedPlayer.Clear();
+            }
+        }
+    }
     public bool isGrounded()
     {
         RaycastHit hit;
@@ -220,33 +252,38 @@ public class PlayerController : MonoBehaviour
         return false;
     }
 
-    void CheckPlayerStandStill()
+    public void AddPoint()
     {
-        if ((GameManager.Instance.isWaveStart) && (this.GetComponent<_1000tons>().enabled == false) && (playerRb.velocity.magnitude < 0.1f))
-        {
-            Debug.Log("Standing");
-            if (!standStilltimerStarted)
-            {
-                standStilltimerStarted = true;
-                standStilltimer = 0.0f;
-            }
-            else
-            {
-                standStilltimer += Time.deltaTime;
-            }
-            if (standStilltimer >= maxStandTime)
-            {
-                //this.gameObject.SetActive(false);
-                standTooLong = true;
-                standStilltimerStarted = false;
-                standStilltimer = 0.0f;
-            }
-        }
-        else
-        {
-            standTooLong = false;
-            standStilltimerStarted = false;
-        }
+        this.point++;
+        this.playerRb.mass = baseMass + point * 2;
+        this.speed = baseSpeed * this.playerRb.mass;
+        this.transform.localScale *= 1.1f;
+    }
+
+    public int GetPoint()
+    {
+        return this.point;
+    }
+    public void SetTouchedPlayer(IPlayer player)
+    {
+        StartCoroutine(TouchedPlayer(player));
+    }
+    IEnumerator TouchedPlayer(IPlayer player)
+    {
+        if (touchedPlayer.Contains(player))
+            touchedPlayer.Remove(player); //reset if touch again
+        touchedPlayer.Add(player);
+       
+        yield return new WaitForSeconds(7); //touch time >7s => no kill count
+        touchedPlayer.Remove(player);
+    }
+
+    public void ResetPoint()
+    {
+        point = 0;
+        playerRb.mass = 10;
+        speed = baseSpeed * playerRb.mass;
+        transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
     }
 }
 

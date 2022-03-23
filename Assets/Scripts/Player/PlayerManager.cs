@@ -10,7 +10,6 @@ public class PlayerManager : MonoBehaviour
     public static PlayerManager Instance;
 
     public Material currentSkin { get; private set; }
-    public GameObject currentIndicator;
 
     [SerializeField] GameObject player;
 
@@ -22,41 +21,7 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] Button previousSkinButton;
     [SerializeField] public Button randomSkinColorButton;
 
-    [Header("Indicator")]
-    [SerializeField] PlayerPowerupIndicatorDB playerPowerupIndicatorDB;
-    [SerializeField] Button nextIndicatorButton;
-    [SerializeField] Button previousIndicatorButton;
-    [SerializeField] public Button randomIndicatorColorButton;
-
-    //mass, speed modify
-    private int totalPoint
-    {
-        get
-        {
-            return PlayerHelper.Instance.currentWave - 1;
-        }
-    }
-    private int pointLeft
-    {
-        get
-        {
-            return totalPoint - totalPointIncrease;
-        }
-    }
-
-    private int totalPointIncrease
-    {
-        get
-        {
-            return PlayerHelper.Instance.massIncrease + PlayerHelper.Instance.speedIncrease;
-        }
-    }
-
-    [Header("Player Attribute")]
-    [SerializeField] Button increaseMassButton;
-    [SerializeField] Button increaseSpeedButton;
-    [SerializeField] TextMeshProUGUI massIncreaseText;
-    [SerializeField] TextMeshProUGUI speedIncreaseText;
+    [SerializeField] TMP_InputField playerName;
 
     void Awake()
     {
@@ -71,14 +36,7 @@ public class PlayerManager : MonoBehaviour
     }
     void Start()
     {
-        //Debug.Log("Skin count: " + playerSkinDB.skinsCount);
-        //Debug.Log("Indicator count: " + playerPowerupIndicatorDB.IndicatorCount);
-
         UpdateSkin(PlayerHelper.Instance.skinID);
-        UpdateIndicator(PlayerHelper.Instance.indicatorID);
-        PointLeftHandle();
-
-        waveText.text = "" + PlayerHelper.Instance.currentWave;
     }
 
     public void NextSkin()
@@ -117,80 +75,9 @@ public class PlayerManager : MonoBehaviour
         //PlayerHelper.Instance.skinID = selectedOption;
 
         previousSkinButton.interactable = (selectedOption > 0);
-        nextSkinButton.interactable = (selectedOption < playerSkinDB.skinsCount
-            && PlayerHelper.Instance.currentWave > playerSkinDB.GetSkinUnlockLevel(selectedOption + 1));
+        nextSkinButton.interactable = (selectedOption < playerSkinDB.skinsCount);
     }
 
-    public void NextIndicator()
-    {
-        PlayerHelper.Instance.indicatorID++;
-        if (PlayerHelper.Instance.indicatorID >= playerPowerupIndicatorDB.IndicatorCount)
-        {
-            PlayerHelper.Instance.indicatorID = playerPowerupIndicatorDB.IndicatorCount;
-        }
-
-        UpdateIndicator(PlayerHelper.Instance.indicatorID);
-    }
-
-    public void PreviousIndicator()
-    {
-        PlayerHelper.Instance.indicatorID--;
-        if (PlayerHelper.Instance.indicatorID <= 0)
-        {
-            PlayerHelper.Instance.indicatorID = 0;
-        }
-
-        UpdateIndicator(PlayerHelper.Instance.indicatorID);
-    }
-
-    private void UpdateIndicator(int selectedOption)
-    {
-        Debug.Log("Update current indicator ID :" + selectedOption);
-
-        var Indicator = playerPowerupIndicatorDB.GetIndicatorDB(selectedOption);
-
-        currentIndicator.transform.GetChild(selectedOption).GetComponent<Renderer>().material.color = PlayerHelper.Instance.indicatorColor;
-
-        //PlayerHelper.Instance.indicatorID = selectedOption;
-
-        for (int ID = 0; ID <= playerPowerupIndicatorDB.IndicatorCount; ID++)
-        {
-            currentIndicator.transform.GetChild(ID).gameObject.SetActive(ID == Indicator.ID);
-        }
-
-        previousIndicatorButton.interactable = (selectedOption > 0);
-        nextIndicatorButton.interactable = (selectedOption < playerPowerupIndicatorDB.IndicatorCount
-            && PlayerHelper.Instance.currentWave > playerPowerupIndicatorDB.GetIndicatorUnlockLevel(selectedOption + 1));
-        //Debug.Log(playerPowerupIndicatorDB.GetIndicatorUnlockLevel(selectedOption));
-    }
-
-    public void IncreaseMass()
-    {
-        PlayerHelper.Instance.massIncrease++;
-        PointLeftHandle();
-    }
-
-    public void IncreaseSpeed()
-    {
-        PlayerHelper.Instance.speedIncrease++;
-        PointLeftHandle();
-    }
-
-    private void PointLeftHandle()
-    {
-        massIncreaseText.text = "" + PlayerHelper.Instance.massIncrease;
-        speedIncreaseText.text = "" + PlayerHelper.Instance.speedIncrease;
-
-        increaseMassButton.interactable = (pointLeft > 0);
-        increaseSpeedButton.interactable = (pointLeft > 0);
-    }
-
-    public void RefreshPoint()
-    {
-        PlayerHelper.Instance.massIncrease = 1;
-        PlayerHelper.Instance.speedIncrease = 1;
-        PointLeftHandle();
-    }
     public void RandomSkinColor()
     {
         PlayerHelper.Instance.skinColor = Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
@@ -201,12 +88,8 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    public void RandomIndicatorColor()
+    public void SubmitName(string arg0)
     {
-        Debug.Log("Random indicator color successful");
-        PlayerHelper.Instance.indicatorColor
-            = currentIndicator.transform.GetChild(PlayerHelper.Instance.indicatorID).GetComponent<Renderer>().material.color
-            = Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
+        PlayerHelper.Instance.playerName = arg0;
     }
-
 }
