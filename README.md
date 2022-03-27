@@ -3,13 +3,9 @@ Survival on the island. Collect powerups, kick enemies off to gain strength.
 
 ## Roadmap
 *Multiplayer, .io website
-
 *Add AI behaviour
-
 *Add skill
-
 *Add IAP skins, indicators
-
 *Add more arenas
 
 ## How to play
