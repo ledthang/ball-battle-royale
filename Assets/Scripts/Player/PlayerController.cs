@@ -82,9 +82,11 @@ public class PlayerController : MonoBehaviour, IPlayer
         speed = baseSpeed * playerRb.mass;
 
         powerupCountdownText.gameObject.SetActive(false);
-        //joystick.gameObject.SetActive(true);
-        castButton.gameObject.SetActive(false);
 
+#if UNITY_ANDROID || UNITY_IPHONE
+        joystick.SetActive(false);
+        castButton.SetActive(false);
+#endif
 
         canvas = GameObject.Find("Canvas");
 
@@ -157,15 +159,27 @@ public class PlayerController : MonoBehaviour, IPlayer
                     break;
                 case PowerupType.Rockets:
                     powerupController = this.gameObject.AddComponent<Rockets>() as PlayerPowerupSystem;
+#if UNITY_ANDROID || UNITY_IPHONE
+                    castButton.SetActive(true);
+#endif
                     break;
                 case PowerupType.Smash:
                     powerupController = this.gameObject.AddComponent<Smash>() as PlayerPowerupSystem;
+#if UNITY_ANDROID || UNITY_IPHONE
+                    castButton.SetActive(true);
+#endif
                     break; ;
                 case PowerupType.Dash:
                     powerupController = this.gameObject.AddComponent<Dash>() as PlayerPowerupSystem;
+#if UNITY_ANDROID || UNITY_IPHONE
+                    castButton.SetActive(true);
+#endif
                     break;
                 case PowerupType._1000tons:
                     powerupController = this.gameObject.AddComponent<_1000tons>() as PlayerPowerupSystem;
+#if UNITY_ANDROID || UNITY_IPHONE
+                    castButton.SetActive(true);
+#endif
                     break;
             }
 
@@ -199,7 +213,10 @@ public class PlayerController : MonoBehaviour, IPlayer
         powerupCountdownText.gameObject.SetActive(false);
 
         currentPowerup = PowerupType.None;
-        castButton.gameObject.SetActive(false);
+
+#if UNITY_ANDROID || UNITY_IPHONE
+        castButton.SetActive(false);
+#endif
     }
 
     void DisplayTime(float timeToDisplay)
@@ -237,6 +254,7 @@ public class PlayerController : MonoBehaviour, IPlayer
                 }
                 touchedPlayer.Clear();
             }
+            GameManager.Instance.isGameOver = true;
         }
     }
     public bool isGrounded()
@@ -256,7 +274,7 @@ public class PlayerController : MonoBehaviour, IPlayer
     {
         this.point++;
         this.playerRb.mass = baseMass + point * 2;
-        this.speed = baseSpeed * this.playerRb.mass;
+        this.speed = baseSpeed * (baseMass + point * 2);
         this.transform.localScale *= 1.1f;
     }
 
@@ -266,14 +284,16 @@ public class PlayerController : MonoBehaviour, IPlayer
     }
     public void SetTouchedPlayer(IPlayer player)
     {
-        StartCoroutine(TouchedPlayer(player));
+        if (this.gameObject.activeSelf == true)
+            if (player != null)
+                StartCoroutine(TouchedPlayer(player));
     }
     IEnumerator TouchedPlayer(IPlayer player)
     {
         if (touchedPlayer.Contains(player))
             touchedPlayer.Remove(player); //reset if touch again
         touchedPlayer.Add(player);
-       
+
         yield return new WaitForSeconds(7); //touch time >7s => no kill count
         touchedPlayer.Remove(player);
     }
@@ -284,6 +304,22 @@ public class PlayerController : MonoBehaviour, IPlayer
         playerRb.mass = 10;
         speed = baseSpeed * playerRb.mass;
         transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
+    }
+    public float GetSpeed()
+    {
+        return this.speed;
+    }
+    public void SetSpeed(float speed)
+    {
+        this.speed = speed;
+    }
+    public float GetMass()
+    {
+        return this.playerRb.mass;
+    }
+    public void SetMass(float mass)
+    {
+        this.playerRb.mass = mass;
     }
 }
 

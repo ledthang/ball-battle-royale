@@ -14,10 +14,10 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI timeText;
     [SerializeField] private TextMeshProUGUI loadText;
     [SerializeField] GameObject loadingCanvas;
-    public bool isGameOver { get; private set; }
+    public bool isGameOver { get; set; }
     public bool isWaveStartCountdown { get; set; }
     //public bool isWaveStart { get; set; }
-   public float timeRemaining { get; set; }
+    public float timeRemaining { get; set; }
     //public int waveNumber;
 
     private float lowerBound = -10;
@@ -52,7 +52,7 @@ public class GameManager : MonoBehaviour
 
     IEnumerator LoadAndStartGame()
     {
-        int loopCount = Random.Range(3, 10);
+        int loopCount = Random.Range(3, 7);
         for (int i = 0; i < loopCount; i++)
         {
             loadText.text = ".";
@@ -62,7 +62,7 @@ public class GameManager : MonoBehaviour
             loadText.text = "...";
             yield return new WaitForSeconds(0.25f);
         }
-        loopCount = Random.Range(3, 10);
+        loopCount = Random.Range(3, 7);
         for (int i = 0; i < loopCount; i++)
         {
             loadText.text = "Loading.";
@@ -88,8 +88,10 @@ public class GameManager : MonoBehaviour
                 AudioManager.Instance.PlayGameOver();
             }
             //player.gameObject.SetActive(false);
-            PlayerController.Instance.joystick.gameObject.SetActive(false);
-            PlayerController.Instance.castButton.gameObject.SetActive(false);
+#if UNITY_ANDROID || UNITY_IPHONE
+            PlayerController.Instance.joystick.SetActive(false);
+            PlayerController.Instance.castButton.SetActive(false);
+#endif
             timeText.gameObject.SetActive(false);
             gameOverLayer.gameObject.SetActive(true);
         }
@@ -112,12 +114,9 @@ public class GameManager : MonoBehaviour
 
     void CheckGameOver()
     {
-        if (player.gameObject.activeSelf)
-            if ((player.transform.position.y < lowerBound))
-            {
-                isGameOver = true;
-            }
+        //now do in PlayerController
     }
+
     void DisplayTime(float timeToDisplay)
     {
         timeToDisplay += 1;
@@ -161,7 +160,10 @@ public class GameManager : MonoBehaviour
         rb.angularVelocity = Vector3.zero;
 
         PlayerController.Instance.NoPowerup();
-        //PlayerController.Instance.joystick.SetActive(true);
+#if UNITY_ANDROID || UNITY_IPHONE
+        PlayerController.Instance.joystick.SetActive(true);
+        PlayerController.Instance.castButton.SetActive(false);
+#endif
     }
     public void MainMenu()
     {

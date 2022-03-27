@@ -67,7 +67,7 @@ public class EnemyBehaviour : MonoBehaviour, IPlayer
         currentTarget = GenerateRandomPosition();
         state = MovementState.Stand;
 
-        for (int i=0; i < point; i++)
+        for (int i = 0; i < point; i++)
         {
             this.enemyRb.mass = baseMass + point * 2;
             this.speed = baseSpeed * this.enemyRb.mass;
@@ -457,7 +457,7 @@ public class EnemyBehaviour : MonoBehaviour, IPlayer
 
     bool IsMovementSafe()
     {
-        float bound = (movementBound - enemyRb.velocity.magnitude*transform.localScale.magnitude);
+        float bound = (movementBound - enemyRb.velocity.magnitude * transform.localScale.magnitude);
         return (Mathf.Abs(this.transform.position.x) < bound) && (Mathf.Abs(this.transform.position.z) < bound);
     }
 
@@ -545,7 +545,8 @@ public class EnemyBehaviour : MonoBehaviour, IPlayer
 
     public void SetTouchedPlayer(IPlayer player)
     {
-        StartCoroutine(TouchedPlayer(player));
+        if (player != null)
+            StartCoroutine(TouchedPlayer(player));
     }
     IEnumerator TouchedPlayer(IPlayer player)
     {
@@ -554,5 +555,22 @@ public class EnemyBehaviour : MonoBehaviour, IPlayer
         touchedPlayer.Add(player);
         yield return new WaitForSeconds(7); //touch time >7s => no kill count
         touchedPlayer.Remove(player);
+    }
+
+    public float GetSpeed()
+    {
+        return this.speed;
+    }
+    public void SetSpeed(float speed)
+    {
+        this.speed = speed;
+    }
+    public float GetMass()
+    {
+        return this.enemyRb.mass;
+    }
+    public void SetMass(float mass)
+    {
+        this.enemyRb.mass = mass;
     }
 }

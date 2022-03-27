@@ -11,22 +11,21 @@ public class _1000tons : PlayerPowerupSystem // 1 ton only
     float tmpMass;
     float tmpSpeed;
     float powerupStrength = 100;
-    //protected Color indicatorColor = new Color32(0, 0, 0, 255);
+    IPlayer current;
     protected override void OnEnable()
     {
         indicatorColor = new Color32(0, 0, 0, 255);
         base.OnEnable();
         Debug.Log("1000tons enable");
-
         rb = this.GetComponent<Rigidbody>();
 
-        //get current mass and speed
-        tmpMass = rb.mass;
-        tmpSpeed = PlayerController.Instance.speed;
+        current = this.GetComponent<IPlayer>();
+        tmpMass = current.GetMass();
+        tmpSpeed = current.GetSpeed();
 
         //set powerup attribute
-        rb.mass = 1000f; //1 ton
-        PlayerController.Instance.speed = rb.mass;
+        current.SetMass(1000f);
+        current.SetSpeed(1000f);
 
         //stop instantly
         rb.velocity = Vector3.zero;
@@ -41,8 +40,8 @@ public class _1000tons : PlayerPowerupSystem // 1 ton only
         base.OnDisable();
 
         //return player attribute
-        rb.mass = tmpMass;
-        PlayerController.Instance.speed = tmpSpeed;
+        current.SetMass(tmpMass);
+        current.SetSpeed(tmpSpeed);
     }
     public override void Cast()
     {

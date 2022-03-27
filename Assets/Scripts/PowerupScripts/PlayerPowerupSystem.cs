@@ -39,10 +39,6 @@ public class PlayerPowerupSystem : MonoBehaviour, ICastable
         if (ammo != 0)
         {
             ammoLeft = ammo;
-            if (this.CompareTag("cPlayer"))
-            {
-                PlayerController.Instance.castButton.gameObject.SetActive(true);
-            }
         }
 
         indicatorPrefab = Resources.Load<GameObject>("Indicator1");
@@ -51,22 +47,10 @@ public class PlayerPowerupSystem : MonoBehaviour, ICastable
     }
     protected virtual void OnDisable()
     {
-        if (this.CompareTag("cPlayer"))
-        {
-            Debug.Log(PlayerController.Instance.currentPowerup + " disabled");
-            PlayerController.Instance.castButton.gameObject.SetActive(false);
-        }
         Destroy(indicator);
     }
 
     public virtual void Cast()
     {
-        if (this.CompareTag("cPlayer"))
-        {
-            if (ammoLeft == 0)
-            {
-                PlayerController.Instance.castButton.gameObject.SetActive(false);
-            }
-        }
     }
 }
